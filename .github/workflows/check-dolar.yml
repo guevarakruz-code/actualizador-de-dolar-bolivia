@@ -1,0 +1,46 @@
+name: Chequear dolar Bolivia
+
+on:
+  schedule:
+    # Cada 20 minutos. GitHub puede retrasar corridas programadas unos minutos
+    # en momentos de mucha carga; no afecta la logica (solo compara contra el
+    # ultimo valor guardado).
+    - cron: "*/20 * * * *"
+  workflow_dispatch: {}   # permite lanzarlo a mano desde la pestana Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: check-dolar
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Revisar cotizacion y avisar si cambio
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python check_dolar.py
+
+      - name: Guardar cambios (precio y wallpaper)
+        run: |
+          git config user.name "actualizador-de-dolar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/last_rates.json wallpaper/current.png
+          git diff --cached --quiet || git commit -m "Actualiza cotizacion del dolar [skip ci]"
+          git push
