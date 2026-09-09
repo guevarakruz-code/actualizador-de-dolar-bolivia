@@ -19,9 +19,21 @@ $accion = New-ScheduledTaskAction -Execute "powershell.exe" `
 # esquema XML (P99999999D...).
 $disparador = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 20) -RepetitionDuration (New-TimeSpan -Days 3650)
 
+# StartWhenAvailable=true: sin esto, si el instante exacto de "-At (Get-Date)"
+# ya paso para cuando el Programador de tareas lo registra (una carrera de
+# tiempos que pasa casi siempre), Windows NO dispara esa primera corrida y
+# se queda esperando el proximo intervalo de 20 minutos.
+$config = New-ScheduledTaskSettingsSet -StartWhenAvailable
+
 Register-ScheduledTask -TaskName "ActualizadorDolarWallpaper" `
-    -Action $accion -Trigger $disparador -Description "Actualiza el fondo de pantalla con el precio del dolar en Bolivia" `
+    -Action $accion -Trigger $disparador -Settings $config `
+    -Description "Actualiza el fondo de pantalla con el precio del dolar en Bolivia" `
     -Force
 
 Write-Output "Tarea 'ActualizadorDolarWallpaper' creada. Se ejecuta cada 20 minutos."
 Write-Output "Para quitarla despues: Unregister-ScheduledTask -TaskName ActualizadorDolarWallpaper"
+
+# La corre una vez de una, para no tener que esperar hasta 20 minutos para
+# ver el primer resultado.
+Start-ScheduledTask -TaskName "ActualizadorDolarWallpaper"
+Write-Output "Primera corrida lanzada ahora mismo (puede tardar unos segundos)."
