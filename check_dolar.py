@@ -447,15 +447,21 @@ def generar_wallpaper(actual, anterior, historial):
     # --- esquina: hora de la proxima actualizacion ---
     ahora_bo = datetime.now(BOLIVIA_TZ)
     proxima = ahora_bo + timedelta(minutes=MINUTOS_ENTRE_CORRIDAS)
+    # Margen grande respecto al borde inferior: en Windows, el estilo de
+    # fondo "Rellenar" (Fill) recorta la imagen para cubrir toda la
+    # pantalla si la proporcion del monitor no es exactamente 16:9, y
+    # ademas la barra de tareas puede tapar una franja del borde inferior.
+    # Con poco margen, este texto quedaba cortado/tapado en otras PCs.
+    margen_inferior = 140
     esquina_txt = f"Proxima actualizacion: ~{proxima.strftime('%H:%M')}"
-    draw.text((60, alto - 60), esquina_txt, font=f_esquina, fill=texto_secundario)
+    draw.text((60, alto - margen_inferior), esquina_txt, font=f_esquina, fill=texto_secundario)
 
     # --- pie (centrado) ---
     fuentes = "dolarbluebolivia.click"
     if bcb_oficial is not None:
         fuentes += "  +  bcb.gob.bo"
     pie = f"Actualizado: {ahora_bo.strftime('%d/%m/%Y %H:%M')} (hora Bolivia)  -  {fuentes}"
-    draw.text((centrar_x(pie, f_pie), alto - 60), pie, font=f_pie, fill=texto_secundario)
+    draw.text((centrar_x(pie, f_pie), alto - margen_inferior), pie, font=f_pie, fill=texto_secundario)
 
     WALLPAPER_FILE.parent.mkdir(parents=True, exist_ok=True)
     img.save(WALLPAPER_FILE)
