@@ -1,12 +1,8 @@
-# Descarga la imagen mas reciente del repositorio de GitHub y la pone como
-# fondo de pantalla de Windows. Pensado para correr cada cierto tiempo desde
-# el Programador de tareas de Windows (ver install_wallpaper_task.ps1).
-#
-# El repositorio es privado, asi que la URL publica de raw.githubusercontent.com
-# da 404 sin autenticacion. Se resuelve pidiendole el token a la sesion de
-# GitHub CLI ya autenticada en este equipo ("gh auth token") y usandolo como
-# cabecera Authorization contra raw.githubusercontent.com. No se crea ni se
-# guarda ningun token nuevo en disco.
+# Descarga la imagen mas reciente del repositorio de GitHub (publico) y la
+# pone como fondo de pantalla de Windows. Pensado para correr cada cierto
+# tiempo desde el Programador de tareas de Windows (ver
+# install_wallpaper_task.ps1). No necesita git ni la CLI de GitHub
+# instalados: solo PowerShell (viene con Windows).
 #
 # NOTAS de depuracion (por si esto vuelve a fallar):
 #   - La API moderna de Windows para el fondo de pantalla (IDesktopWallpaper,
@@ -41,13 +37,10 @@ $stamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
 $destino = Join-Path $carpetaDestino "dolar-bolivia-$stamp.png"
 
 try {
-    $token = (& gh auth token).Trim()
-    if (-not $token) { throw "gh auth token no devolvio nada (revisa 'gh auth status')" }
-
     # Nota: en Windows PowerShell 5.1, "$var?..." dentro de una cadena se
     # interpola vacio (bug de parsing); por eso se usa ${Repo}/${Path}.
     $url = "https://raw.githubusercontent.com/${Repo}/main/${Path}?t=$stamp"
-    Invoke-WebRequest -Uri $url -Headers @{ Authorization = "token $token" } -OutFile $destino -UseBasicParsing
+    Invoke-WebRequest -Uri $url -OutFile $destino -UseBasicParsing
 } catch {
     Write-Warning "No se pudo descargar la imagen ($_). Se mantiene el fondo de pantalla actual."
     exit 1

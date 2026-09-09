@@ -59,15 +59,41 @@ Una vez que el repo esté en GitHub y el workflow haya corrido al menos una
 vez (para que exista `wallpaper/current.png`), corre en PowerShell:
 
 ```powershell
-powershell -File scripts\install_wallpaper_task.ps1 -ImageUrl "https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/wallpaper/current.png"
+powershell -File scripts\install_wallpaper_task.ps1 -Repo "TU_USUARIO/TU_REPO"
 ```
 
-Esto registra una tarea programada de Windows que actualiza el fondo de
-pantalla cada 20 minutos. Para quitarla:
+Esto registra una tarea programada de Windows (`ActualizadorDolarWallpaper`)
+que cada 20 minutos descarga la última imagen y la pone de fondo de
+pantalla (guardada en `Imágenes\ActualizadorDolarBolivia`). Para quitarla:
 
 ```powershell
 Unregister-ScheduledTask -TaskName ActualizadorDolarWallpaper
 ```
+
+## Poner el fondo de pantalla en OTRA computadora (sin repetir todo lo demás)
+
+El aviso y la generación de la imagen ya corren centralizados en GitHub
+Actions (una sola vez para todas tus PCs). Para que una segunda
+computadora con Windows también muestre el fondo actualizado, solo hace
+falta el paso 4 de arriba en esa máquina — no hace falta Python, ni git,
+ni repetir la configuración de Telegram/correo.
+
+**En la otra laptop, en PowerShell** (no requiere permisos de administrador):
+
+```powershell
+# 1. Crea una carpeta para los scripts y descarga los dos que hacen falta
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\ActualizadorDolarBolivia" | Out-Null
+cd "$env:USERPROFILE\ActualizadorDolarBolivia"
+Invoke-WebRequest "https://raw.githubusercontent.com/guevarakruz-code/actualizador-de-dolar-bolivia/main/scripts/set_wallpaper.ps1" -OutFile "set_wallpaper.ps1"
+Invoke-WebRequest "https://raw.githubusercontent.com/guevarakruz-code/actualizador-de-dolar-bolivia/main/scripts/install_wallpaper_task.ps1" -OutFile "install_wallpaper_task.ps1"
+
+# 2. Instala la tarea programada (queda actualizando el fondo cada 20 min)
+powershell -ExecutionPolicy Bypass -File install_wallpaper_task.ps1 -Repo "guevarakruz-code/actualizador-de-dolar-bolivia"
+```
+
+Con eso queda. Esa laptop va a mostrar el mismo precio del dólar que esta,
+actualizado cada 20 minutos, sin depender de que esta PC esté prendida (el
+que realmente consulta los precios corre en la nube, en GitHub Actions).
 
 ## Probar en tu propia PC (sin GitHub Actions)
 
