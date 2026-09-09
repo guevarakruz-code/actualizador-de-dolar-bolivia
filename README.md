@@ -1,16 +1,22 @@
 # Actualizador de dólar (Bolivia)
 
-Revisa la cotización del dólar paralelo en [dolarbluebolivia.click](https://www.dolarbluebolivia.click/)
-y avisa por Telegram y correo cuando cambia. También genera una imagen
+Revisa la cotización del dólar en dos fuentes independientes —
+[dolarbluebolivia.click](https://www.dolarbluebolivia.click/) (paralelo/blue)
+y el [Banco Central de Bolivia](https://www.bcb.gob.bo/) (oficial) — y avisa
+por Telegram y correo cuando cambia alguna. También genera una imagen
 (`wallpaper/current.png`) con el precio actual para usar como fondo de
 pantalla en Windows.
 
 ## Cómo funciona
 
 - `check_dolar.py` lee `https://www.dolarbluebolivia.click/tasas.json` (el
-  endpoint propio del sitio, permitido por su `robots.txt`), compara contra
-  el último valor guardado en `data/last_rates.json` y, si cambió, manda los
-  avisos.
+  endpoint propio del sitio, permitido por su `robots.txt`) y además lee el
+  tipo de cambio oficial directamente de la portada de `bcb.gob.bo` (el BCB
+  no tiene un endpoint JSON público, así que se extrae del HTML). Compara
+  ambas fuentes contra el último valor guardado en `data/last_rates.json` y,
+  si algo cambió, manda los avisos. Si el BCB falla o cambia su HTML, esa
+  fuente se salta sin romper la corrida (sigue funcionando solo con
+  dolarbluebolivia.click).
 - `.github/workflows/check-dolar.yml` ejecuta ese script cada 20 minutos en
   GitHub Actions (gratis) y guarda el resultado en el repo.
 - `scripts/set_wallpaper.ps1` (en tu PC) descarga la última imagen generada
