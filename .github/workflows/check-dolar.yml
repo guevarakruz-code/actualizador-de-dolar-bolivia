@@ -41,6 +41,6 @@ jobs:
         run: |
           git config user.name "actualizador-de-dolar-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/last_rates.json wallpaper/current.png
+          git add data/last_rates.json data/history.json wallpaper/current.png
           git diff --cached --quiet || git commit -m "Actualiza cotizacion del dolar [skip ci]"
           git push
