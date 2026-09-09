@@ -29,6 +29,19 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Log simple para poder confirmar despues si una corrida (sobre todo las
+# lanzadas por el Programador de tareas, que no muestra su salida en
+# pantalla) realmente hizo algo o no. Se observo en la practica que el
+# Programador de tareas a veces reporta "exito" (LastTaskResult 0) sin
+# haber ejecutado nada -- este log es la unica forma confiable de
+# distinguir eso de una corrida real.
+$logFile = Join-Path $env:TEMP "actualizador-dolar-wallpaper.log"
+function Log($mensaje) {
+    "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $mensaje" | Add-Content -Path $logFile -Encoding UTF8
+}
+
+Log "Corrida iniciada (Repo=$Repo)"
+
 $carpetaImagenes = [Environment]::GetFolderPath("MyPictures")
 $carpetaDestino = Join-Path $carpetaImagenes "ActualizadorDolarBolivia"
 New-Item -ItemType Directory -Path $carpetaDestino -Force | Out-Null
@@ -42,9 +55,12 @@ try {
     $url = "https://raw.githubusercontent.com/${Repo}/main/${Path}?t=$stamp"
     Invoke-WebRequest -Uri $url -OutFile $destino -UseBasicParsing
 } catch {
+    Log "ERROR al descargar: $_"
     Write-Warning "No se pudo descargar la imagen ($_). Se mantiene el fondo de pantalla actual."
     exit 1
 }
+
+Log "Descarga OK: $destino"
 
 Add-Type @"
 using System;
@@ -100,6 +116,7 @@ public static class WallpaperSetter
 
 [WallpaperSetter]::Set($destino)
 Write-Output "Fondo de pantalla actualizado: $destino"
+Log "Fondo de pantalla aplicado OK"
 
 # Limpieza: borra versiones anteriores en esa carpeta (deja la actual).
 Get-ChildItem -Path $carpetaDestino -Filter "dolar-bolivia-*.png" -ErrorAction SilentlyContinue |

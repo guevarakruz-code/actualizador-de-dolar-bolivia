@@ -23,7 +23,18 @@ $disparador = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval 
 # ya paso para cuando el Programador de tareas lo registra (una carrera de
 # tiempos que pasa casi siempre), Windows NO dispara esa primera corrida y
 # se queda esperando el proximo intervalo de 20 minutos.
-$config = New-ScheduledTaskSettingsSet -StartWhenAvailable
+#
+# AllowStartIfOnBatteries / DontStopIfGoingOnBatteries: por defecto Windows
+# no corre (o corta) tareas programadas cuando la laptop esta en bateria;
+# esto es una laptop, asi que sin estas opciones se saltea corridas.
+#
+# MultipleInstances Parallel: por defecto, si una corrida anterior quedo
+# marcada como "en ejecucion" (por ejemplo, tras una prueba manual
+# interrumpida), el Programador de tareas SALTEA en silencio la siguiente
+# corrida programada -- reporta exito (LastTaskResult 0) sin ejecutar nada
+# en realidad. Esto se observo en la practica. Con Parallel, cada corrida
+# programada se ejecuta si o si.
+$config = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances Parallel
 
 Register-ScheduledTask -TaskName "ActualizadorDolarWallpaper" `
     -Action $accion -Trigger $disparador -Settings $config `
