@@ -14,10 +14,22 @@ $scriptPath = Join-Path $PSScriptRoot "set_wallpaper.ps1"
 $accion = New-ScheduledTaskAction -Execute "powershell.exe" `
     -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`" -Repo `"$Repo`""
 
+# El cron externo (cron-job.org) dispara la corrida en la nube justo en
+# los cuartos de hora (:00 :15 :30 :45). Para no bajar una imagen vieja
+# (que pasaria si el primer disparo local cae, por ejemplo, en :53 y el
+# siguiente en :08 -- desfasado de la nube), el disparo local se alinea al
+# proximo cuarto de hora + 2 minutos de margen (tiempo de sobra para que
+# la corrida en GitHub Actions termine y commitee).
+$ahora = Get-Date
+$cuartoActual = Get-Date -Year $ahora.Year -Month $ahora.Month -Day $ahora.Day -Hour $ahora.Hour `
+    -Minute ([Math]::Floor($ahora.Minute / 15) * 15) -Second 0 -Millisecond 0
+$inicio = $cuartoActual.AddMinutes(2)
+while ($inicio -le $ahora) { $inicio = $inicio.AddMinutes(15) }
+
 # Duracion larga (10 anos) en vez de TimeSpan.MaxValue: el Programador de
 # tareas de Windows rechaza duraciones de repeticion que no caben en su
 # esquema XML (P99999999D...).
-$disparador = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 15) -RepetitionDuration (New-TimeSpan -Days 3650)
+$disparador = New-ScheduledTaskTrigger -Once -At $inicio -RepetitionInterval (New-TimeSpan -Minutes 15) -RepetitionDuration (New-TimeSpan -Days 3650)
 
 # StartWhenAvailable=true: sin esto, si el instante exacto de "-At (Get-Date)"
 # ya paso para cuando el Programador de tareas lo registra (una carrera de
