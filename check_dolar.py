@@ -51,7 +51,7 @@ BOLIVIA_TZ = timezone(timedelta(hours=-4))
 
 HISTORIAL_HORAS = 4          # ventana que se muestra en el grafico
 HISTORIAL_MAX_ENTRADAS = 300  # limite de seguridad para que el archivo no crezca sin fin
-MINUTOS_ENTRE_CORRIDAS = 20   # cadencia del workflow de GitHub Actions
+MINUTOS_ENTRE_CORRIDAS = 15   # cadencia real: el cron externo (cron-job.org) dispara cada 15 min
 
 
 def obtener_tasas():

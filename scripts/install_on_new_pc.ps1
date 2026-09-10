@@ -19,4 +19,4 @@ foreach ($archivo in @("set_wallpaper.ps1", "install_wallpaper_task.ps1")) {
 powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $carpeta "install_wallpaper_task.ps1") -Repo $Repo
 
 Write-Output ""
-Write-Output "Listo. El fondo de pantalla se va a actualizar solo cada 20 minutos."
+Write-Output "Listo. El fondo de pantalla se va a actualizar solo cada 15 minutos."

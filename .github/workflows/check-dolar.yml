@@ -2,11 +2,15 @@ name: Chequear dolar Bolivia
 
 on:
   schedule:
-    # Cada 20 minutos. GitHub puede retrasar corridas programadas unos minutos
-    # en momentos de mucha carga; no afecta la logica (solo compara contra el
-    # ultimo valor guardado).
+    # Respaldo: GitHub puede retrasar (o directamente saltear por horas) los
+    # triggers de "schedule" en repos con poco trafico -- se observo en la
+    # practica que este cron interno llegaba a espaciarse mas de 4 horas en
+    # vez de cada 20 min. Por eso la cadencia real la maneja un cron EXTERNO
+    # (cron-job.org, cada 15 min) que llama al endpoint de workflow_dispatch
+    # de la API de GitHub -- ver README.md, seccion "Cron externo". Este
+    # cron interno queda solo como red de seguridad por si el externo falla.
     - cron: "*/20 * * * *"
-  workflow_dispatch: {}   # permite lanzarlo a mano desde la pestana Actions
+  workflow_dispatch: {}   # permite lanzarlo a mano (o via el cron externo)
 
 permissions:
   contents: write

@@ -17,10 +17,15 @@ pantalla en Windows.
   si algo cambió, manda los avisos. Si el BCB falla o cambia su HTML, esa
   fuente se salta sin romper la corrida (sigue funcionando solo con
   dolarbluebolivia.click).
-- `.github/workflows/check-dolar.yml` ejecuta ese script cada 20 minutos en
-  GitHub Actions (gratis) y guarda el resultado en el repo.
+- `.github/workflows/check-dolar.yml` ejecuta ese script en GitHub Actions
+  (gratis) y guarda el resultado en el repo. La cadencia real (cada 15 min)
+  la maneja un **cron externo** (ver sección más abajo) porque el cron
+  interno de GitHub (`schedule`) no es puntual para intervalos cortos en
+  repos con poco tráfico — se observó en la práctica que llegaba a
+  espaciarse más de 4 horas en vez de cada 20 min. El `schedule` interno
+  queda solo como respaldo.
 - `scripts/set_wallpaper.ps1` (en tu PC) descarga la última imagen generada
-  y la pone de fondo de pantalla.
+  y la pone de fondo de pantalla, cada 15 minutos.
 
 ## Configuración (una sola vez)
 
@@ -63,12 +68,32 @@ powershell -File scripts\install_wallpaper_task.ps1 -Repo "TU_USUARIO/TU_REPO"
 ```
 
 Esto registra una tarea programada de Windows (`ActualizadorDolarWallpaper`)
-que cada 20 minutos descarga la última imagen y la pone de fondo de
+que cada 15 minutos descarga la última imagen y la pone de fondo de
 pantalla (guardada en `Imágenes\ActualizadorDolarBolivia`). Para quitarla:
 
 ```powershell
 Unregister-ScheduledTask -TaskName ActualizadorDolarWallpaper
 ```
+
+### 5. Cron externo (para que la actualización sea puntual)
+
+El `schedule` interno de GitHub Actions no es confiable para intervalos
+cortos (ver nota más arriba), así que la cadencia real la maneja un cron
+externo gratuito, [cron-job.org](https://cron-job.org), que llama a la API
+de GitHub cada 15 minutos para forzar la corrida:
+
+1. **Token de GitHub** (Settings → Developer settings → Fine-grained
+   tokens → Generate new token): acceso solo a este repositorio, permiso
+   **Actions: Read and write** (es el único permiso necesario).
+2. **Cronjob en cron-job.org**, cada 15 minutos, con:
+   - URL: `https://api.github.com/repos/TU_USUARIO/TU_REPO/actions/workflows/check-dolar.yml/dispatches`
+   - Método: `POST`
+   - Headers: `Authorization: Bearer TU_TOKEN`, `Accept: application/vnd.github+json`, `Content-Type: application/json`
+   - Body: `{"ref":"main"}`
+
+Si alguna vez cambian el token o quieren migrar a otro servicio de cron,
+esta es toda la configuración necesaria — no depende de nada más en el
+repo.
 
 ## Poner el fondo de pantalla en OTRA computadora (sin repetir todo lo demás)
 
@@ -87,12 +112,12 @@ cd "$env:USERPROFILE\ActualizadorDolarBolivia"
 Invoke-WebRequest "https://raw.githubusercontent.com/guevarakruz-code/actualizador-de-dolar-bolivia/main/scripts/set_wallpaper.ps1" -OutFile "set_wallpaper.ps1"
 Invoke-WebRequest "https://raw.githubusercontent.com/guevarakruz-code/actualizador-de-dolar-bolivia/main/scripts/install_wallpaper_task.ps1" -OutFile "install_wallpaper_task.ps1"
 
-# 2. Instala la tarea programada (queda actualizando el fondo cada 20 min)
+# 2. Instala la tarea programada (queda actualizando el fondo cada 15 min)
 powershell -ExecutionPolicy Bypass -File install_wallpaper_task.ps1 -Repo "guevarakruz-code/actualizador-de-dolar-bolivia"
 ```
 
 Con eso queda. Esa laptop va a mostrar el mismo precio del dólar que esta,
-actualizado cada 20 minutos, sin depender de que esta PC esté prendida (el
+actualizado cada 15 minutos, sin depender de que esta PC esté prendida (el
 que realmente consulta los precios corre en la nube, en GitHub Actions).
 
 ## Probar en tu propia PC (sin GitHub Actions)
