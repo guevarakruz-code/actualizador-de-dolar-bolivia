@@ -1,9 +1,9 @@
 {
-  "blue_compra": 12,
-  "blue_venta": 12.05,
+  "blue_compra": 12.01,
+  "blue_venta": 12.04,
   "oficial_compra": 11.84,
   "oficial_venta": 11.84,
-  "consultado_en": "2026-10-23T15:15:17.345369+00:00",
+  "consultado_en": "2026-10-23T15:30:17.964863+00:00",
   "bcb_oficial": 11.84,
   "bcb_ufv": 3.36231
 }
